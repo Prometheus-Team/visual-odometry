@@ -60,10 +60,12 @@ def main():
 
     prev_image = None
 
+    # ? Ground truth from KITTI
     valid_ground_truth = False
     if dataset.ground_truth is not None:
         valid_ground_truth = True
 
+    # If Camera matrix is provided or use default
     if dataset.camera_matrix is not None:
         camera_matrix = dataset.camera_matrix()
     else:
@@ -104,37 +106,14 @@ def main():
 
         scale = 1.0
 
-        # calc scale from ground truth if exists.
-        if valid_ground_truth:
-            ground_truth = dataset.ground_truth[index]
-            ground_truth_pos = [ground_truth[0, 3], ground_truth[2, 3]]
-            previous_ground_truth = dataset.ground_truth[index - 1]
-            previous_ground_truth_pos = [
-                previous_ground_truth[0, 3],
-                previous_ground_truth[2, 3]]
-
-            scale = calc_euclid_dist(ground_truth_pos,
-                                     previous_ground_truth_pos)
+        # TODO: *here. calc scale from ground truth if exists.
 
         current_pos += current_rot.dot(t) * scale
         current_rot = R.dot(current_rot)
 
-        # get ground truth if eist.
-        if valid_ground_truth:
-            ground_truth = dataset.ground_truth[index]
-            position_axes.scatter(ground_truth[0, 3],
-                                  ground_truth[2, 3],
-                                  marker='^',
-                                  c='r')
+        # TODO: *here. get ground truth if exists.
 
-        # calc rotation error with ground truth.
-        if valid_ground_truth:
-            ground_truth = dataset.ground_truth[index]
-            ground_truth_rotation = ground_truth[0: 3, 0: 3]
-            r_vec, _ = cv2.Rodrigues(current_rot.dot(ground_truth_rotation.T))
-            rotation_error = np.linalg.norm(r_vec)
-            frame_index_list.append(index)
-            rotation_error_list.append(rotation_error)
+        # TODO: *here. calc rotation error with ground truth.
 
         position_axes.scatter(current_pos[0][0], current_pos[2][0])
         plt.pause(.01)
