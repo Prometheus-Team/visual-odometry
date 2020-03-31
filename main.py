@@ -12,6 +12,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from dataset import create_dataset
 import math
+import video
+
 
 
 def parse_argument():
@@ -30,6 +32,9 @@ def calc_euclid_dist(p1, p2):
 def main():
     options = parse_argument()
     dataset = create_dataset(options)
+
+    # get input from video
+    inputStream = video.create_capture(options.path)
 
     feature_detector = cv2.FastFeatureDetector_create(threshold=25,
                                                       nonmaxSuppression=True)
@@ -66,9 +71,15 @@ def main():
                                   [0.0, 718.8560, 185.2157],
                                   [0.0, 0.0, 1.0]])
     
-    for index in xrange(dataset.image_count):
+    while True:
         # load image
-        image = cv2.imread(dataset.image_path_left(index))
+
+        # ? Read image file
+        # image = cv2.imread(dataset.image_path_left(index))
+
+        # ? Read a frame from a video file
+        _ret, image = inputStream.read()
+
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # main process
