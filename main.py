@@ -29,6 +29,10 @@ def calc_euclid_dist(p1, p2):
     return math.sqrt(a)
 
 
+def takeResponseValue(element):
+    return element.response
+
+
 def main():
     options = parse_argument()
     dataset = create_dataset(options)
@@ -87,13 +91,20 @@ def main():
         # main process
         keypoint = feature_detector.detect(image, None)
 
+        # Take 1000 best key points
+        keypoint.sort(key=takeResponseValue, reverse=True)
+        keypoint = keypoint[0:1000]
+
         if prev_image is None:
             prev_image = image
             prev_keypoint = keypoint
             continue
 
-        points = np.array(map(lambda x: [x.pt], prev_keypoint),
-                          dtype=np.float32)
+        # list(map())
+        # points = np.array(list(map(lambda x: [x.pt], prev_keypoint)),
+        #                   dtype=np.float32)
+
+        points = np.array([[x.pt] for x in prev_keypoint], dtype=np.float32)
 
         p1, st, err = cv2.calcOpticalFlowPyrLK(prev_image,
                                                image, points,
