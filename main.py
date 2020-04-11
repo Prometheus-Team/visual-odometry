@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from dataset import create_dataset
 import math
 import video
-
+import time
 
 
 def parse_argument():
@@ -77,14 +77,20 @@ def main():
                                   [0.0, 718.8560, 185.2157],
                                   [0.0, 0.0, 1.0]])
     
+
+    trackedPoints = []
+
     while True:
         # load image
 
         # ? Read image file
         # image = cv2.imread(dataset.image_path_left(index))
 
-        # ? Read a frame from a video file
+        # Read a frame from a video file
         _ret, image = inputStream.read()
+
+        if (_ret == False):
+            break
 
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -95,17 +101,25 @@ def main():
         keypoint.sort(key=takeResponseValue, reverse=True)
         keypoint = keypoint[0:1000]
 
+        if len(keypoint) < 10:
+            # print("Keypoints/Features are under threshold: ", keypoint)
+            continue
+
         if prev_image is None:
             prev_image = image
             prev_keypoint = keypoint
             continue
 
-        # list(map())
+
         # points = np.array(list(map(lambda x: [x.pt], prev_keypoint)),
         #                   dtype=np.float32)
 
-        points = np.array([[x.pt] for x in prev_keypoint], dtype=np.float32)
 
+        # !Start Time
+        startTime = time.time()
+
+        points = np.array([[x.pt] for x in prev_keypoint], dtype=np.float32)
+        
         p1, st, err = cv2.calcOpticalFlowPyrLK(prev_image,
                                                image, points,
                                                None, **lk_params)
@@ -126,17 +140,36 @@ def main():
 
         # TODO: *here. calc rotation error with ground truth.
 
+        trackedPoints.append(current_pos.copy())
         position_axes.scatter(current_pos[0][0], current_pos[2][0])
-        plt.pause(.01)
+        
+        # ? Uncomment the next line to see realtime output graph
+        # plt.pause(.01)
 
         img = cv2.drawKeypoints(image, keypoint, None)
 
+        # ? Uncomment the next line to see the video feed
+        # cv2.imshow('feature', img)
         # cv2.imshow('image', image)
-        cv2.imshow('feature', img)
-        cv2.waitKey(1)
 
+        cv2.waitKey(1)
+        
         prev_image = image
         prev_keypoint = keypoint
+
+        # !Stop Time
+        duration = time.time() - startTime
+        print("Duration: ",duration)
+
+    
+    with open("output_data" + str(time.time()) + ".csv", "w") as out_file:
+        for i in range(len(trackedPoints)):
+            out_string = ""
+            out_string += str(trackedPoints[i][0]) 
+            # out_string += ", " + str(trackedPoints[i][1]) 
+            out_string += ", " + str(trackedPoints[i][2]) + "\n"
+            out_file.write(out_string)
+
     position_figure.savefig("position_plot.png")
     rotation_error_axes.bar(frame_index_list, rotation_error_list)
     error_figure.savefig("error.png")
